@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rpg-postgres
+    restart: unless-stopped
+    ports:
+      - "${PG_PORT}:5432"
+    environment:
+      POSTGRES_DB: ${PG_DB}
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./student-fee-poc/dotnet/StudentFeePoc
+      dockerfile: Dockerfile
+    container_name: rpg-dotnet-api
+    restart: unless-stopped
+    ports:
+      - "${API_PORT}:8080"
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=${PG_DB};Username=${PG_USER};Password=${PG_PASSWORD}
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  migrator:
+    build:
+      context: .
+      dockerfile: ./scripts/Dockerfile
+    container_name: rpg-migrator
+    environment:
+      - PG_HOST=postgres
+      - PG_PORT=5432
+      - PG_DB=${PG_DB}
+      - PG_USER=${PG_USER}
+      - PG_PASSWORD=${PG_PASSWORD}
+      - RAVEN_URL=${RAVEN_URL}
+      - RAVEN_DB=${RAVEN_DB}
+      - RAVEN_CERT_FILE=/app/scripts/${RAVEN_CERT_FILE}
+      - RAVEN_CERT_PASSWORD=${RAVEN_CERT_PASSWORD}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - migration
+      - tools
+
+  tests:
+    image: mcr.microsoft.com/dotnet/sdk:10.0-preview
+    container_name: rpg-tests
+    volumes:
+      - ./student-fee-poc:/app
+    working_dir: /app/dotnet/StudentFeePoc.Tests
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=${PG_DB};Username=${PG_USER};Password=${PG_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["dotnet", "test"]
+    profiles:
+      - test
+      - tools
+
+volumes:
+  postgres_data:

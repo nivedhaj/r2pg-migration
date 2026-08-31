@@ -1,0 +1,43 @@
+# ==============================================================================
+# Git Ignore Configuration for Production Readiness
+# Prevents committing secrets, credentials, certificates, and build artifacts
+# ==============================================================================
+
+# Secrets & Environment Configurations
+.env
+.env.*
+!.env.example
+
+# Certificates & Private Keys
+*.pfx
+*.pem
+*.crt
+*.cer
+*.key
+scripts/certs/*
+!scripts/certs/.gitkeep
+!scripts/certs/README.md
+
+# .NET Build Outputs & IDE Caches
+**/bin/
+**/obj/
+[Bb]in/
+[Oo]bj/
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Python Caches & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Validation Output & Run Artifacts
+validation/*.json
+!validation/.gitkeep
+*.log

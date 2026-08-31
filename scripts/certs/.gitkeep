@@ -1,0 +1,2 @@
+# Place your RavenDB client certificate (.pfx) in this folder.
+# All certificate files in this directory are ignored by Git for security.
