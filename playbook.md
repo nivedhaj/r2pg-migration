@@ -1,29 +1,30 @@
 # Local Testing & Onboarding Playbook
 ## CT-RPG: RavenDB to PostgreSQL Migration & .NET 10 Web API
 
-A step-by-step walkthrough for developers and evaluators to configure credentials, start infrastructure, run the data migration, execute tests, and inspect the PostgreSQL database and ASP.NET Core 10 Web API.
+A comprehensive, step-by-step playbook for developers and evaluators to configure credentials, start infrastructure, run migrations (via Docker or local CLI), execute automated .NET 10 test suites, and inspect database objects and REST API endpoints.
 
 ---
 
 ## 1. Prerequisites
 
 - **Docker Desktop** (Running with Linux containers)
-- **RavenDB Client Certificate** (`.pfx` file if connecting to RavenDB Cloud)
-- *(Optional)* **.NET 10 SDK** (Only needed if running API or tests directly on the host machine instead of Docker)
+- **RavenDB Client Certificate** (`.pfx` file if connecting to RavenDB Cloud HTTPS)
+- *(Optional)* **.NET 10 SDK & Python 3.12** (Only needed if running scripts/API directly on host machine without Docker)
 
 ---
 
 ## 2. Configuration Setup
 
-### A. Environment Configuration (`.env`)
-Create your **`.env`** file by copying from **`.env.example`**:
+All connection parameters are centralized in a single root **`.env`** file.
+
+### Step A: Create `.env` from Example Template
 ```bash
 cp .env.example .env
 ```
 
 #### Placeholders Reference Table (`.env`)
 
-| Variable | Placeholder / Example | Description |
+| Variable | Placeholder / Default | Description |
 |---|---|---|
 | `PG_PORT` | `5422` | Host port for Docker PostgreSQL (avoids conflicts with local Postgres 5432/5433) |
 | `API_PORT` | `5000` | Host port for .NET 10 Web API |
@@ -37,21 +38,21 @@ cp .env.example .env
 
 ---
 
-### B. Certificate Placement
-If connecting to RavenDB Cloud (HTTPS), copy your `.pfx` certificate into:
+### Step B: Place RavenDB Certificate
+If connecting to RavenDB Cloud (HTTPS), copy your `.pfx` certificate to:
 ```text
 scripts/
 └── certs/
     └── <your-client-certificate>.pfx
 ```
-*(All `.pfx` and certificate files in this directory are automatically ignored by Git for security).*
+*(All `.pfx` certificate files in this directory are automatically ignored by Git for security).*
 
 ---
 
-### C. Local Host Execution: `appsettings.json` *(Optional)*
+### Step C: Local Host `appsettings.json` *(Only for Local Devs without Docker)*
 When running via **Docker Compose**, connection strings are injected automatically from `.env`.
 
-If you choose to run or debug the .NET 10 API and tests **directly on your host machine** (via Visual Studio, Rider, or `dotnet run`), update the connection string with your password in:
+If you choose to run or debug the .NET 10 API and tests **directly on your host machine** (via Visual Studio, Rider, or `dotnet run`), configure the connection string with your password in:
 - `student-fee-poc/dotnet/StudentFeePoc/appsettings.json`
 - `student-fee-poc/dotnet/StudentFeePoc.Tests/appsettings.json`
 
@@ -65,14 +66,14 @@ If you choose to run or debug the .NET 10 API and tests **directly on your host 
 
 ---
 
-## 3. Step-by-Step Walkthrough
+## 3. Primary Execution Flow: Docker Approach (Zero-Config)
 
 Follow these 4 steps in order:
 
 ### Step 1: Start PostgreSQL & .NET 10 Web API
 
 > [!TIP]
-> **Port Conflict / Existing Instances:** If you encounter an error like `port is already allocated` or older container instances are still running, stop them before starting:
+> **Port Conflict / Existing Instances:** If you encounter an error like `port is already allocated` or older container instances are running, stop them before starting:
 > ```bash
 > docker stop ct-postgres ct-dotnet-api
 > ```
@@ -82,11 +83,8 @@ Start the PostgreSQL 16 database and ASP.NET Core 10 Web API container:
 docker compose up -d --build postgres api
 ```
 
----
-
-#### 🔌 How to Connect pgAdmin to PostgreSQL:
+#### 🔌 Connect pgAdmin to PostgreSQL:
 Right after running Step 1, connect pgAdmin to the running Docker database:
-
 1. Open **pgAdmin**.
 2. In the left browser tree, right-click **Servers** ➔ **Register** ➔ **Server...**
 3. In the **General** tab:
@@ -98,15 +96,22 @@ Right after running Step 1, connect pgAdmin to the running Docker database:
    - **Username**: `postgres`
    - **Password**: `<your-postgres-password>` *(configured in `.env`)*
 5. Click **Save**.
-6. The `rpg` database is now connected. *(Base tables will be populated after Step 2).*
+6. The `rpg` database is now connected. *(Tables will be populated after Step 2).*
 
 ---
 
 ### Step 2: Run Data Migration via Docker
 Runs the Python ETL pipeline to extract data from RavenDB, dynamically create PostgreSQL base tables, transform documents, and apply indexes, views, and triggers:
+
 ```bash
+# Run all 6 migration modules (personas, courses, staffs, students, fees, exams):
 docker compose run --rm migrator --all
 ```
+
+> **Selective Module Migration**: To run only specific modules (e.g. Students and Fees):
+> ```bash
+> docker compose run --rm migrator --module student,fees
+> ```
 
 > **View Migrated Tables in pgAdmin**: After migration finishes, in pgAdmin expand `Docker RPG (Port 5422)` ➔ `Databases` ➔ `rpg` ➔ `Schemas` ➔ `public`, then right-click **Tables** and click **Refresh** (or press `F5`) to view all 9 tables and views!
 
@@ -136,15 +141,86 @@ curl.exe -s "http://localhost:5000/api/students?limit=2"
 # 3. Query cross-module fee summary (View join):
 curl.exe -s "http://localhost:5000/api/student-fees?limit=2"
 
-# 4. Insert Fee Transaction (POST write test):
+# 4. Insert Fee Transaction (POST write test with audit trigger):
 curl.exe -s -X POST "http://localhost:5000/api/fee-transactions" -H "Content-Type: application/json" -d "{\"studentId\": \"cc93c106-82ea-4610-9873-3db87f1307c6\", \"amount\": 500.00, \"status\": \"Active\", \"feeId\": \"a7e2851c-2321-4adc-993a-387deefee3a8\", \"refNo\": \"DEMO-CURL-01\"}"
 ```
 
 ---
 
-## 4. Teardown & Clean Reset
+## 4. Alternative Execution: Local Host Developer Workflow (Direct CLI)
 
-To stop the containers:
+If you prefer running tools directly on your local host (outside Docker):
+
+### A. Python ETL Migration CLI
+1. Install requirements:
+   ```bash
+   pip install -r scripts/requirements.txt
+   ```
+2. Run master migration (automatically reads root `.env`):
+   ```bash
+   python scripts/migrate_all.py --all
+   ```
+3. Run individual module scripts directly:
+   ```bash
+   python scripts/student_ravendb_to_postgres_migrate.py
+   python scripts/fees_ravendb_to_postgres_migrate.py
+   python scripts/courses_ravendb_to_postgres_migrate.py
+   python scripts/staffs_ravendb_to_postgres_migrate.py
+   python scripts/personas_ravendb_to_postgres_migrate.py
+   python scripts/exams_ravendb_to_postgres_migrate.py
+   ```
+
+---
+
+### B. .NET 10 Web API & xUnit Test Suite CLI
+1. Run xUnit tests directly on host:
+   ```bash
+   dotnet test student-fee-poc/dotnet/StudentFeePoc.Tests/StudentFeePoc.Tests.csproj
+   ```
+2. Run ASP.NET Core 10 Web API on host:
+   ```bash
+   dotnet run --project student-fee-poc/dotnet/StudentFeePoc/StudentFeePoc.csproj
+   ```
+
+---
+
+## 5. Database Verification & SQL Inspection
+
+You can run these queries directly in pgAdmin Query Tool or `psql` to verify data integrity:
+
+### 1. Verify Migrated Record Counts
+```sql
+SELECT 'organization' AS entity, COUNT(*) FROM organization
+UNION ALL SELECT 'institute', COUNT(*) FROM institute
+UNION ALL SELECT 'student', COUNT(*) FROM student
+UNION ALL SELECT 'fee', COUNT(*) FROM fee
+UNION ALL SELECT 'fee_transaction', COUNT(*) FROM fee_transaction
+UNION ALL SELECT 'persona', COUNT(*) FROM persona
+UNION ALL SELECT 'course', COUNT(*) FROM course
+UNION ALL SELECT 'staff', COUNT(*) FROM staff
+UNION ALL SELECT 'exam', COUNT(*) FROM exam;
+```
+
+### 2. Verify Cross-Module View (`student_fee_summary_view`)
+```sql
+SELECT student_code, student_name, course_name, fee_name, amount, paid_amount, status
+FROM student_fee_summary_view
+LIMIT 10;
+```
+
+### 3. Verify PostgreSQL Trigger Audit Trail
+```sql
+SELECT tx_no, student_id, amount, status, action, logged_at
+FROM fee_transaction_audit
+ORDER BY logged_at DESC
+LIMIT 5;
+```
+
+---
+
+## 6. Teardown & Clean Reset
+
+To stop running containers:
 ```bash
 docker compose down
 ```
