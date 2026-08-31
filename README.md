@@ -326,7 +326,7 @@ CT-RPG/
 ├── docker-compose.yml              # Orchestrates PostgreSQL + .NET API + Migrator
 ├── .env                            # Central configuration & port definitions
 ├── README.md                       # Master demo and architecture documentation
-├── PLAYBOOK.md                     # Step-by-step local testing playbook
+├── playbook.md                     # Step-by-step local testing playbook
 │
 ├── scripts/                        # Containerized Migration Tool
 │   ├── Dockerfile                  # Python migration container
