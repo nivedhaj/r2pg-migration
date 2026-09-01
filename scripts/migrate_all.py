@@ -16,7 +16,7 @@ MODULE_SCRIPTS = [
     ("personas", "personas_ravendb_to_postgres_migrate.py"),
     ("courses", "courses_ravendb_to_postgres_migrate.py"),
     ("staffs", "staffs_ravendb_to_postgres_migrate.py"),
-    ("student", "student_ravendb_to_postgres_migrate.py"),
+    ("students", "students_ravendb_to_postgres_migrate.py"),
     ("fees", "fees_ravendb_to_postgres_migrate.py"),
     ("exams", "exams_ravendb_to_postgres_migrate.py"),
 ]
@@ -112,7 +112,8 @@ def main():
     if args.all or not args.module:
         selected_modules = [m[0] for m in MODULE_SCRIPTS]
     else:
-        selected_modules = [m.strip().lower() for m in args.module.split(",")]
+        raw_modules = [m.strip().lower() for m in args.module.split(",")]
+        selected_modules = ["students" if m == "student" else m for m in raw_modules]
 
     print(f"[*] Queued migration modules: {', '.join(selected_modules)}")
     

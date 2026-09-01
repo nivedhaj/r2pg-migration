@@ -19,7 +19,7 @@ services:
 
   api:
     build:
-      context: ./student-fee-poc/dotnet/StudentFeePoc
+      context: ./student-fee-poc/dotnet/student-fee-poc
       dockerfile: Dockerfile
     container_name: rpg-dotnet-api
     restart: unless-stopped
@@ -61,7 +61,7 @@ services:
     container_name: rpg-tests
     volumes:
       - ./student-fee-poc:/app
-    working_dir: /app/dotnet/StudentFeePoc.Tests
+    working_dir: /app/dotnet/student-fee-poc-tests
     environment:
       - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=${PG_DB};Username=${PG_USER};Password=${PG_PASSWORD}
     depends_on:

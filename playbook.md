@@ -53,8 +53,8 @@ scripts/
 When running via **Docker Compose**, connection strings are injected automatically from `.env`.
 
 If you choose to run or debug the .NET 10 API and tests **directly on your host machine** (via Visual Studio, Rider, or `dotnet run`), configure the connection string with your password in:
-- `student-fee-poc/dotnet/StudentFeePoc/appsettings.json`
-- `student-fee-poc/dotnet/StudentFeePoc.Tests/appsettings.json`
+- `student-fee-poc/dotnet/student-fee-poc/appsettings.json`
+- `student-fee-poc/dotnet/student-fee-poc-tests/appsettings.json`
 
 ```json
 {
@@ -162,7 +162,7 @@ If you prefer running tools directly on your local host (outside Docker):
    ```
 3. Run individual module scripts directly:
    ```bash
-   python scripts/student_ravendb_to_postgres_migrate.py
+   python scripts/students_ravendb_to_postgres_migrate.py
    python scripts/fees_ravendb_to_postgres_migrate.py
    python scripts/courses_ravendb_to_postgres_migrate.py
    python scripts/staffs_ravendb_to_postgres_migrate.py
@@ -175,11 +175,11 @@ If you prefer running tools directly on your local host (outside Docker):
 ### B. .NET 10 Web API & xUnit Test Suite CLI
 1. Run xUnit tests directly on host:
    ```bash
-   dotnet test student-fee-poc/dotnet/StudentFeePoc.Tests/StudentFeePoc.Tests.csproj
+   dotnet test student-fee-poc/dotnet/student-fee-poc-tests/student-fee-poc-tests.csproj
    ```
 2. Run ASP.NET Core 10 Web API on host:
    ```bash
-   dotnet run --project student-fee-poc/dotnet/StudentFeePoc/StudentFeePoc.csproj
+   dotnet run --project student-fee-poc/dotnet/student-fee-poc/student-fee-poc.csproj
    ```
 
 ---

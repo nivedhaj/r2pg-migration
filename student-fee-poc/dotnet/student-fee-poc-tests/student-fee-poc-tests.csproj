@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\StudentFeePoc\StudentFeePoc.csproj" />
+    <ProjectReference Include="..\student-fee-poc\student-fee-poc.csproj" />
   </ItemGroup>
 
   <ItemGroup>

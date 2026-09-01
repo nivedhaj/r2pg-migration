@@ -186,7 +186,7 @@ Run the xUnit test suite inside the .NET 10 container (automatically pulls datab
 docker compose run --rm tests
 ```
 
-*(Alternatively, if running on host with .NET 10 SDK: `dotnet test ./student-fee-poc/dotnet/StudentFeePoc.Tests/StudentFeePoc.Tests.csproj`)*
+*(Alternatively, if running on host with .NET 10 SDK: `dotnet test ./student-fee-poc/dotnet/student-fee-poc-tests/student-fee-poc-tests.csproj`)*
 
 #### Test Suite Coverage:
 1. `CanConnectToDatabase`: Verifies PostgreSQL connectivity.
@@ -333,7 +333,7 @@ CT-RPG/
 │   ├── requirements.txt            # psycopg2-binary, requests, cryptography, requests-pkcs12
 │   ├── migrate_all.py              # Master migration CLI runner (loads data + applies view/triggers)
 │   ├── certs/                      # RavenDB PKCS#12 client certificate (.pfx)
-│   ├── student_ravendb_to_postgres_migrate.py
+│   ├── students_ravendb_to_postgres_migrate.py
 │   ├── fees_ravendb_to_postgres_migrate.py
 │   ├── courses_ravendb_to_postgres_migrate.py
 │   ├── exams_ravendb_to_postgres_migrate.py
@@ -346,17 +346,17 @@ CT-RPG/
     │   ├── 01_student_fee_view.sql # student_fee_summary_view definition + GIN/B-tree indexes
     │   └── 02_trigger.sql          # Trigger and audit function definitions
     └── dotnet/
-        ├── StudentFeePoc/          # ASP.NET Core 8 Web API
+        ├── student-fee-poc/        # ASP.NET Core 10 Web API
         │   ├── Dockerfile          # Production multi-stage Docker build
         │   ├── Program.cs          # REST endpoints, DI, and Swagger configuration
-        │   ├── StudentFeePoc.csproj
+        │   ├── student-fee-poc.csproj
         │   ├── appsettings.json    # PostgreSQL connection strings
         │   ├── Db/                 # Data Access Layer
         │   │   ├── Student/        # StudentQueries.cs
         │   │   └── Fee/            # FeeQueries.cs, FeeTransactionQueries.cs, FeeTransactionWriteQueries.cs
         │   └── Models/             # StudentFeeViewModel.cs, FeeTransactionApiResponse.cs
-        └── StudentFeePoc.Tests/    # xUnit Automated Test Suite
-            ├── StudentFeePoc.Tests.csproj
+        └── student-fee-poc-tests/  # xUnit Automated Test Suite
+            ├── student-fee-poc-tests.csproj
             ├── TestFixture.cs      # Test DB setup and connection pooling
             ├── DbReadTests.cs      # Student reads, view joins, API payload tests
             └── DbWriteTests.cs     # Transaction insertion & audit trigger tests
