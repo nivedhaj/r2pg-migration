@@ -261,20 +261,40 @@ def decimal_to_float(value: Any) -> Optional[float]:
 
 
 def exam_status_code(value: Any) -> int:
-    return {
+    mapping = {
         "Unknown": 0,
         "Active": 1,
         "Scheduled": 10,
         "Conducted": 20,
         "Locked": 90,
         "Disabled": 99,
-    }.get(value, 0)
+    }
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return 0
 
 
 def parse_exam_status(value: Any) -> str:
-    if value in ("Unknown", "Active", "Scheduled", "Conducted", "Locked", "Disabled"):
+    valid_names = ("Unknown", "Active", "Scheduled", "Conducted", "Locked", "Disabled")
+    if value in valid_names:
         return str(value)
-    return "Active"
+    try:
+        return {
+            0: "Unknown",
+            1: "Active",
+            10: "Scheduled",
+            20: "Conducted",
+            90: "Locked",
+            99: "Disabled",
+        }.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def build_exams_list_payload(

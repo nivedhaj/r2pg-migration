@@ -285,47 +285,89 @@ def as_list(value: Any) -> List[Any]:
 
 
 def status_code(value: Any) -> int:
-    return {"Unknown": -1, "Active": 1, "Disabled": 99}.get(value, -1)
+    mapping = {"Unknown": -1, "Active": 1, "Disabled": 99}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return -1
 
 
 def gender_code(value: Any) -> int:
-    return {"Female": 0, "Male": 1, "NoInfo": 90}.get(value, 90)
+    mapping = {"Female": 0, "Male": 1, "NoInfo": 90}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return 90
 
 
 def parse_student_gender(value: Any) -> str:
     if value in ("Female", "Male", "NoInfo"):
         return str(value)
-    return "NoInfo"
+    try:
+        return {0: "Female", 1: "Male", 90: "NoInfo"}.get(int(value), "NoInfo")
+    except (TypeError, ValueError):
+        return "NoInfo"
 
 
 def parse_student_status(value: Any) -> str:
     if value in ("Unknown", "Active", "Disabled"):
         return str(value)
-    return "Active"
+    try:
+        return {-1: "Unknown", 1: "Active", 99: "Disabled"}.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def org_status_code(value: Any) -> int:
-    return {
+    mapping = {
         "Unknown": -1,
         "ActivationPending": 0,
         "Active": 1,
         "Locked": 90,
         "Disabled": 99,
-    }.get(value, -1)
+    }
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return -1
 
 
 def inst_status_code(value: Any) -> int:
-    return {
+    mapping = {
         "Unknown": -1,
         "ActivationPending": 0,
         "Active": 1,
         "Locked": 90,
         "Disabled": 99,
-    }.get(value, -1)
+    }
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return -1
 
 
 def edu_level_code(value: Any) -> int:
-    return {
+    mapping = {
         "Unknown": -1,
         "PreNursery": 2,
         "Nursery": 5,
@@ -333,23 +375,50 @@ def edu_level_code(value: Any) -> int:
         "UnderGraduate": 20,
         "Graduate": 30,
         "PostGraduate": 40,
-    }.get(value, -1)
+    }
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return -1
 
 
 def parse_organization_status(value: Any) -> str:
     if value in ("Unknown", "ActivationPending", "Active", "Locked", "Disabled"):
         return str(value)
-    return "Active"
+    try:
+        return {
+            -1: "Unknown",
+            0: "ActivationPending",
+            1: "Active",
+            90: "Locked",
+            99: "Disabled",
+        }.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def parse_institute_status(value: Any) -> str:
     if value in ("Unknown", "ActivationPending", "Active", "Locked", "Disabled"):
         return str(value)
-    return "Active"
+    try:
+        return {
+            -1: "Unknown",
+            0: "ActivationPending",
+            1: "Active",
+            90: "Locked",
+            99: "Disabled",
+        }.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def parse_edu_level(value: Any) -> Optional[str]:
-    if value in (
+    valid_names = (
         "Unknown",
         "PreNursery",
         "Nursery",
@@ -357,9 +426,21 @@ def parse_edu_level(value: Any) -> Optional[str]:
         "UnderGraduate",
         "Graduate",
         "PostGraduate",
-    ):
+    )
+    if value in valid_names:
         return str(value)
-    return None
+    try:
+        return {
+            -1: "Unknown",
+            2: "PreNursery",
+            5: "Nursery",
+            10: "School",
+            20: "UnderGraduate",
+            30: "Graduate",
+            40: "PostGraduate",
+        }.get(int(value), None)
+    except (TypeError, ValueError):
+        return None
 
 
 def as_string_list(value: Any) -> Optional[List[str]]:

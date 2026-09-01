@@ -320,27 +320,42 @@ def iso_utc(value: Any) -> Optional[str]:
 
 
 def staff_status_code(value: Any) -> int:
-    return {
-        "Unknown": -1,
-        "Active": 1,
-        "Disabled": 99,
-    }.get(value, -1)
+    mapping = {"Unknown": -1, "Active": 1, "Disabled": 99}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return -1
 
 
 def gender_code(value: Any) -> int:
-    return {
-        "Female": 0,
-        "Male": 1,
-        "NoInfo": 90,
-    }.get(value, 90)
+    mapping = {"Female": 0, "Male": 1, "NoInfo": 90}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return 90
 
 
 def staff_type_code(value: Any) -> int:
-    return {
-        "Teaching": 0,
-        "NonTeaching": 1,
-        "Management": 2,
-    }.get(value, 0)
+    mapping = {"Teaching": 0, "NonTeaching": 1, "Management": 2}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return 0
 
 
 def contact_type_code(value: Any) -> int:
@@ -449,19 +464,28 @@ def as_string_list(value: Any) -> Optional[List[str]]:
 def parse_staff_type(value: Any) -> Optional[str]:
     if value in ("Teaching", "NonTeaching", "Management"):
         return str(value)
-    return None
+    try:
+        return {0: "Teaching", 1: "NonTeaching", 2: "Management"}.get(int(value), None)
+    except (TypeError, ValueError):
+        return None
 
 
 def parse_gender_enum(value: Any) -> Optional[str]:
     if value in ("Female", "Male", "NoInfo"):
         return str(value)
-    return "NoInfo"
+    try:
+        return {0: "Female", 1: "Male", 90: "NoInfo"}.get(int(value), "NoInfo")
+    except (TypeError, ValueError):
+        return "NoInfo"
 
 
 def parse_staff_status(value: Any) -> str:
     if value in ("Unknown", "Active", "Disabled"):
         return str(value)
-    return "Active"
+    try:
+        return {-1: "Unknown", 1: "Active", 99: "Disabled"}.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def to_camel_dict(row: Dict[str, Any]) -> Dict[str, Any]:

@@ -290,18 +290,29 @@ def parse_int(value: Any) -> Optional[int]:
 
 
 def fee_status_code(value: Any) -> int:
-    return {
-        "Unknown": 0,
-        "Active": 1,
-        "Disabled": 99,
-    }.get(value, 0)
+    mapping = {"Unknown": 0, "Active": 1, "Disabled": 99}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return 0
 
 
 def fee_tx_status_code(value: Any) -> int:
-    return {
-        "Active": 1,
-        "Disabled": 99,
-    }.get(value, 1)
+    mapping = {"Active": 1, "Disabled": 99}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return 1
 
 
 def parse_decimal(value: Any) -> Optional[Decimal]:
@@ -367,13 +378,19 @@ def iso_utc(value: Any) -> Optional[str]:
 def parse_fee_status(value: Any) -> str:
     if value in ("Unknown", "Active", "Disabled"):
         return str(value)
-    return "Active"
+    try:
+        return {0: "Unknown", 1: "Active", 99: "Disabled"}.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def parse_fee_tx_status(value: Any) -> str:
     if value in ("Active", "Disabled"):
         return str(value)
-    return "Active"
+    try:
+        return {1: "Active", 99: "Disabled"}.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def parse_payment_mode(value: Any, default: Optional[str] = "Cash") -> Optional[str]:

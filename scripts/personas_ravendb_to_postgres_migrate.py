@@ -322,7 +322,7 @@ def as_string_list(value: Any) -> Optional[List[str]]:
 
 
 def persona_type_code(value: Any) -> int:
-    return {
+    mapping = {
         "Anon": 10,
         "Management": 20,
         "Parent": 30,
@@ -330,27 +330,56 @@ def persona_type_code(value: Any) -> int:
         "Student": 50,
         "External": 80,
         "Dev": 90,
-    }.get(value, 10)
+    }
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return 10
 
 
 def persona_status_code(value: Any) -> int:
-    return {
-        "Unknown": -1,
-        "Active": 1,
-        "Disabled": 99,
-    }.get(value, -1)
+    mapping = {"Unknown": -1, "Active": 1, "Disabled": 99}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return -1
 
 
 def parse_persona_type(value: Any) -> Optional[str]:
-    if value in ("Anon", "Management", "Parent", "Staff", "Student", "External", "Dev"):
+    valid_names = ("Anon", "Management", "Parent", "Staff", "Student", "External", "Dev")
+    if value in valid_names:
         return str(value)
-    return None
+    try:
+        return {
+            10: "Anon",
+            20: "Management",
+            30: "Parent",
+            40: "Staff",
+            50: "Student",
+            80: "External",
+            90: "Dev",
+        }.get(int(value), None)
+    except (TypeError, ValueError):
+        return None
 
 
 def parse_persona_status(value: Any) -> str:
     if value in ("Unknown", "Active", "Disabled"):
         return str(value)
-    return "Active"
+    try:
+        return {-1: "Unknown", 1: "Active", 99: "Disabled"}.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def to_camel_dict(row: Dict[str, Any]) -> Dict[str, Any]:

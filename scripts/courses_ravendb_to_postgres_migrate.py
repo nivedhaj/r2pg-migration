@@ -285,7 +285,7 @@ def parse_int(value: Any) -> Optional[int]:
 
 
 def edu_level_code(value: Any) -> int:
-    return {
+    mapping = {
         "Unknown": -1,
         "PreNursery": 2,
         "Nursery": 5,
@@ -293,11 +293,20 @@ def edu_level_code(value: Any) -> int:
         "UnderGraduate": 20,
         "Graduate": 30,
         "PostGraduate": 40,
-    }.get(value, -1)
+    }
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return -1
 
 
 def parse_edu_level(value: Any) -> Optional[str]:
-    if value in (
+    valid_names = (
         "Unknown",
         "PreNursery",
         "Nursery",
@@ -305,23 +314,43 @@ def parse_edu_level(value: Any) -> Optional[str]:
         "UnderGraduate",
         "Graduate",
         "PostGraduate",
-    ):
+    )
+    if value in valid_names:
         return str(value)
-    return None
+    try:
+        return {
+            -1: "Unknown",
+            2: "PreNursery",
+            5: "Nursery",
+            10: "School",
+            20: "UnderGraduate",
+            30: "Graduate",
+            40: "PostGraduate",
+        }.get(int(value), None)
+    except (TypeError, ValueError):
+        return None
 
 
 def course_status_code(value: Any) -> int:
-    return {
-        "Unknown": 0,
-        "Active": 1,
-        "Disabled": 99,
-    }.get(value, 0)
+    mapping = {"Unknown": 0, "Active": 1, "Disabled": 99}
+    if value in mapping:
+        return mapping[value]
+    try:
+        val_int = int(value)
+        if val_int in mapping.values():
+            return val_int
+    except (TypeError, ValueError):
+        pass
+    return 0
 
 
 def parse_course_status(value: Any) -> str:
     if value in ("Unknown", "Active", "Disabled"):
         return str(value)
-    return "Active"
+    try:
+        return {0: "Unknown", 1: "Active", 99: "Disabled"}.get(int(value), "Active")
+    except (TypeError, ValueError):
+        return "Active"
 
 
 def as_text(value: Any) -> Optional[str]:
