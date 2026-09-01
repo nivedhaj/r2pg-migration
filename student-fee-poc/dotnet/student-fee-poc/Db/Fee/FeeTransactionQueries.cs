@@ -8,6 +8,7 @@ public static class FeeTransactionQueries
 {
     public static async Task<FeeTransactionApiResponse> GetFeeTransactionsAsync(
         NpgsqlDataSource dataSource,
+        Guid? id = null,
         int limit = 10)
     {
         // 1. Fetch fee lookup map for feeDisplayText & installment descriptions
@@ -70,18 +71,20 @@ public static class FeeTransactionQueries
                 ) AS enrollment 
                 LIMIT 1
             ) se ON TRUE
+            WHERE (@filterId::uuid IS NULL OR ft.id = @filterId::uuid)
             ORDER BY ft.tx_date DESC NULLS LAST, ft.tx_no DESC
             LIMIT @limit;
             """;
 
         var dtoList = new List<FeeTransactionDto>();
         await using var command = dataSource.CreateCommand(txSql);
+        command.Parameters.AddWithValue("filterId", (object?)id ?? DBNull.Value);
         command.Parameters.AddWithValue("limit", limit);
 
         await using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            var id = reader.GetGuid(0);
+            var txId = reader.GetGuid(0);
             var ownerId = reader.IsDBNull(1) ? (Guid?)null : reader.GetGuid(1);
             var parentId = reader.IsDBNull(2) ? (Guid?)null : reader.GetGuid(2);
             var txNo = reader.IsDBNull(3) ? null : reader.GetString(3);
@@ -201,7 +204,7 @@ public static class FeeTransactionQueries
             var discounts = JsonSerializer.Deserialize<List<object>>(discountsJson) ?? new List<object>();
 
             dtoList.Add(new FeeTransactionDto(
-                id,
+                txId,
                 ownerId,
                 parentId,
                 txNo,
@@ -225,6 +228,6 @@ public static class FeeTransactionQueries
             ));
         }
 
-        return new FeeTransactionApiResponse(new FeeTransactionDataWrapper(dtoList));
+        return new FeeTransactionApiResponse(dtoList);
     }
 }

@@ -3,10 +3,6 @@ using System.Text.Json.Serialization;
 namespace StudentFeePoc.Models;
 
 public sealed record FeeTransactionApiResponse(
-    [property: JsonPropertyName("data")] FeeTransactionDataWrapper Data
-);
-
-public sealed record FeeTransactionDataWrapper(
     [property: JsonPropertyName("data")] IReadOnlyList<FeeTransactionDto> Data
 );
 

@@ -204,78 +204,31 @@ docker compose run --rm tests
 
 Test all exposed REST API endpoints:
 
-#### 1. Single-Module Student Query (Reads JSONB Enrollments)
+#### 1. CampusTrack Student Endpoint
 ```bash
-curl.exe -s "http://localhost:5000/api/students?limit=2"
+curl.exe -s "http://localhost:5000/api/stu/student?activeStudentsOnly=false&todaysAbsenteesOnly=false&limit=2"
 ```
 
-#### 2. Single-Module Fee Definitions Query
+#### 2. CampusTrack Fee Transactions Endpoint
 ```bash
-curl -s "http://localhost:5000/api/fees?limit=2"
+curl.exe -s "http://localhost:5000/api/feeTx?id=&limit=2"
 ```
 
-#### 3. Cross-Module View Query (Student + Enrollments + Fee + Transactions)
+#### 3. CampusTrack Fee Definitions Endpoint
 ```bash
-curl -s "http://localhost:5000/api/student-fees?limit=2"
-```
-*Sample Response:*
-```json
-{
-  "source": "student_fee_summary_view",
-  "count": 2,
-  "data": [
-    {
-      "id": "33333333-3333-3333-3333-333333333333",
-      "ownerId": "00000000-0000-0000-0000-000000000001",
-      "parentId": "00000000-0000-0000-0000-000000000001",
-      "txNo": "TXN-20260828-001",
-      "txDate": "2026-08-28T07:00:00",
-      "studentId": "11111111-1111-1111-1111-111111111111",
-      "studentCode": "STU001",
-      "studentName": "John Doe",
-      "courseId": "CSE-101",
-      "courseName": "Computer Science",
-      "section": "Section A",
-      "termName": "Semester 1",
-      "amount": 15000.00,
-      "feeId": "22222222-2222-2222-2222-222222222222",
-      "feeName": "Tuition Fee",
-      "feeDisplayText": "Tuition Fee - Sem 1",
-      "installmentId": 1,
-      "installmentDescription": "1st Installment",
-      "dueDate": "2026-09-01T00:00:00",
-      "paidAmount": 5000.00,
-      "finesPaid": [],
-      "discounts": [],
-      "feeAdjustment": {},
-      "isFinePaid": false,
-      "isDiscountGiven": false,
-      "isOpeningBalanceAdjusted": false,
-      "status": "Active",
-      "statusCode": 1,
-      "refNo": "REF-001",
-      "paidBy": "Online"
-    }
-  ]
-}
+curl.exe -s "http://localhost:5000/api/fee?limit=2"
 ```
 
-#### 4. PostgreSQL-Derived Exact Fee Transactions Payload
+#### 4. Insert Fee Transaction (POST Write API with Audit Trigger)
 ```bash
-curl -s "http://localhost:5000/api/fee-transactions?limit=2"
-```
-
-#### 5. Insert Fee Transaction (Write API)
-```bash
-curl -s -X POST "http://localhost:5000/api/fee-transactions" \
+curl.exe -s -X POST "http://localhost:5000/api/feeTx" \
   -H "Content-Type: application/json" \
   -d '{
-    "studentId": "11111111-1111-1111-1111-111111111111",
-    "amount": 750.00,
+    "studentId": "cc93c106-82ea-4610-9873-3db87f1307c6",
+    "amount": 500.00,
     "status": "Active",
-    "feeId": "22222222-2222-2222-2222-222222222222",
-    "refNo": "CURL-DEMO-001",
-    "paidBy": "Credit Card"
+    "feeId": "a7e2851c-2321-4adc-993a-387deefee3a8",
+    "refNo": "DEMO-CURL-01"
   }'
 ```
 
@@ -297,25 +250,22 @@ CREATE INDEX idx_student_enrollments_gin ON student USING GIN (enrollments);
 CREATE INDEX idx_fee_transaction_installments_gin ON fee_transaction USING GIN (installments_paid);
 ```
 
-### 2. Cross-Module View: `student_fee_summary_view`
-Defined in `student-fee-poc/sql/01_student_fee_view.sql`.
-
-### 3. Triggers
+### 2. Triggers & Audit Function
 Defined in `student-fee-poc/sql/02_trigger.sql`:
 - **`trg_student_modified_on` / `trg_fee_modified_on` / `trg_fee_transaction_modified_on`**: Automatically maintains `modified_on = CURRENT_TIMESTAMP` before any update on `student`, `fee`, and `fee_transaction`.
+- **`trg_fee_transaction_audit`**: Records immutable append-only audit trail logs in `fee_transaction_audit`.
 
 ---
 
 ## 🔌 API Endpoint Reference
 
-| Method | Route | Description |
-|---|---|---|
-| `GET` | `/health` | Healthcheck & PostgreSQL ping |
-| `GET` | `/api/students?limit=10` | Single-module student list with JSONB enrollment breakdown |
-| `GET` | `/api/fees?limit=10` | Single-module fee definition list |
-| `GET` | `/api/student-fees?limit=10` | Synchronous cross-module read via `student_fee_summary_view` |
-| `GET` | `/api/fee-transactions?limit=10` | Exact fee transactions API structure |
-| `POST` | `/api/fee-transactions` | Inserts transaction & activates audit trigger |
+| Method | Route | Description | CampusTrack URL Parity |
+|---|---|---|---|
+| `GET` | `/health` | Healthcheck & PostgreSQL ping | System |
+| `GET` | `/api/stu/student` | Full student profile + father/mother/guardian contacts + JSONB enrollments | `https://svc.campustrack.net/api/stu/student` |
+| `GET` | `/api/feeTx` | Fee transactions with installments, fines, discounts & adjustments | `https://svc.campustrack.net/api/feeTx` |
+| `POST` | `/api/feeTx` | Inserts transaction & activates database audit trigger | `https://svc.campustrack.net/api/feeTx` |
+| `GET` | `/api/fee` | Fee definition list with `instId`, `displayText`, and `isTxDone` flag | `https://svc.campustrack.net/api/fee` |
 
 ---
 

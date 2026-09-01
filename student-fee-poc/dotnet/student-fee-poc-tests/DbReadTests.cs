@@ -23,42 +23,52 @@ public class DbReadTests : IClassFixture<TestFixture>
     }
 
     [Fact]
-    public async Task CanQueryRecentStudentsWithEnrollments()
+    public async Task CanQueryCampusTrackStudentsPayload()
     {
-        var students = await StudentQueries.GetRecentStudentsAsync(_fixture.DataSource, limit: 5);
-        Assert.NotNull(students);
-        // If data is migrated, verify properties
-        if (students.Count > 0)
+        var response = await StudentQueries.GetStudentsPayloadAsync(_fixture.DataSource, limit: 5);
+        Assert.NotNull(response);
+        Assert.True(response.ContainsKey("data"));
+        var dataArray = response["data"]?.AsArray();
+        Assert.NotNull(dataArray);
+        if (dataArray.Count > 0)
         {
-            var first = students[0];
+            var first = dataArray[0]?.AsObject();
+            Assert.NotNull(first);
+            Assert.True(first.ContainsKey("id"));
+            Assert.True(first.ContainsKey("name"));
+            Assert.True(first.ContainsKey("studentId"));
+            Assert.True(first.ContainsKey("father"));
+            Assert.True(first.ContainsKey("mother"));
+            Assert.True(first.ContainsKey("guardian"));
+            Assert.True(first.ContainsKey("courseName"));
+        }
+    }
+
+    [Fact]
+    public async Task CanQueryCampusTrackFeeList()
+    {
+        var feeList = await FeeQueries.GetFeesAsync(_fixture.DataSource, limit: 5);
+        Assert.NotNull(feeList);
+        Assert.NotNull(feeList.Data);
+        if (feeList.Data.Count > 0)
+        {
+            var first = feeList.Data[0];
             Assert.NotEqual(Guid.Empty, first.Id);
+            Assert.False(string.IsNullOrWhiteSpace(first.Name));
         }
     }
 
     [Fact]
-    public async Task CanQueryStudentFeeSummaryView()
-    {
-        const string sql = """
-            SELECT id, student_id, student_name, course_name, fee_name, paid_amount
-            FROM student_fee_summary_view
-            LIMIT 5;
-            """;
-
-        await using var cmd = _fixture.DataSource.CreateCommand(sql);
-        await using var reader = await cmd.ExecuteReaderAsync();
-        while (await reader.ReadAsync())
-        {
-            var pk = reader.GetGuid(0);
-            Assert.NotEqual(Guid.Empty, pk);
-        }
-    }
-
-    [Fact]
-    public async Task CanQueryFeeTransactionsApiPayload()
+    public async Task CanQueryCampusTrackFeeTransactionsApiPayload()
     {
         var response = await FeeTransactionQueries.GetFeeTransactionsAsync(_fixture.DataSource, limit: 5);
         Assert.NotNull(response);
         Assert.NotNull(response.Data);
-        Assert.NotNull(response.Data.Data);
+        if (response.Data.Count > 0)
+        {
+            var first = response.Data[0];
+            Assert.NotEqual(Guid.Empty, first.Id);
+            Assert.NotNull(first.StudentName);
+        }
     }
 }

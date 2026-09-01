@@ -135,14 +135,17 @@ Or verify endpoints directly in your terminal:
 # 1. Health check:
 curl.exe -s http://localhost:5000/health
 
-# 2. Query students (JSONB enrollments):
-curl.exe -s "http://localhost:5000/api/students?limit=2"
+# 2. CampusTrack Students endpoint (matching /api/stu/student):
+curl.exe -s "http://localhost:5000/api/stu/student?limit=2"
 
-# 3. Query cross-module fee summary (View join):
-curl.exe -s "http://localhost:5000/api/student-fees?limit=2"
+# 3. CampusTrack Fee Transactions endpoint (matching /api/feeTx):
+curl.exe -s "http://localhost:5000/api/feeTx?limit=2"
 
-# 4. Insert Fee Transaction (POST write test with audit trigger):
-curl.exe -s -X POST "http://localhost:5000/api/fee-transactions" -H "Content-Type: application/json" -d "{\"studentId\": \"cc93c106-82ea-4610-9873-3db87f1307c6\", \"amount\": 500.00, \"status\": \"Active\", \"feeId\": \"a7e2851c-2321-4adc-993a-387deefee3a8\", \"refNo\": \"DEMO-CURL-01\"}"
+# 4. CampusTrack Fee Definitions endpoint (matching /api/fee):
+curl.exe -s "http://localhost:5000/api/fee?limit=2"
+
+# 5. Insert Fee Transaction (POST /api/feeTx write test with audit trigger):
+curl.exe -s -X POST "http://localhost:5000/api/feeTx" -H "Content-Type: application/json" -d "{\"studentId\": \"cc93c106-82ea-4610-9873-3db87f1307c6\", \"amount\": 500.00, \"status\": \"Active\", \"feeId\": \"a7e2851c-2321-4adc-993a-387deefee3a8\", \"refNo\": \"DEMO-CURL-01\"}"
 ```
 
 ---
