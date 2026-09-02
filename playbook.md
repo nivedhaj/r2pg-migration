@@ -39,7 +39,10 @@ cp .env.example .env
 ---
 
 ### Step B: Place RavenDB Certificate
-If connecting to RavenDB Cloud (HTTPS), copy your `.pfx` certificate to:
+If connecting to RavenDB Cloud (HTTPS), download the client certificate from the shared Google Drive:
+ **[Download RavenDB Client Certificate (.pfx)](https://drive.google.com/file/d/1tcdrDU3Q1zzWBqs-BS0_0PGGvXjR2INI/view?usp=drive_link)**
+
+Copy the downloaded `.pfx` certificate into:
 ```text
 scripts/
 └── certs/

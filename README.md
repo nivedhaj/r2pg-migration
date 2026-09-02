@@ -111,7 +111,7 @@ cp .env.example .env
 | `RAVEN_CERT_FILE` | `certs/<your-client-cert>.pfx` | Path to client certificate in `scripts/certs/` |
 | `RAVEN_CERT_PASSWORD` | `<your-cert-password>` (or leave empty) | Certificate password (if protected) |
 
-> **Certificate Placement**: If using RavenDB Cloud or HTTPS, place your `.pfx` file into `scripts/certs/` (e.g. `scripts/certs/<your-cert>.pfx`). All certificate files in `scripts/certs/` are ignored by Git for security.
+> **Certificate Placement**: If using RavenDB Cloud or HTTPS, download the client certificate from the shared Google Drive: **[Download RavenDB Client Certificate (.pfx)](https://drive.google.com/file/d/1tcdrDU3Q1zzWBqs-BS0_0PGGvXjR2INI/view?usp=drive_link)** and place your `.pfx` file into `scripts/certs/` (e.g. `scripts/certs/<your-cert>.pfx`). All certificate files in `scripts/certs/` are ignored by Git for security.
 >
 > **Local Host .NET Execution (`appsettings.json`)**: When running with Docker Compose, connection strings are injected dynamically from `.env`. If running .NET directly on the host machine without Docker, update the password placeholder in `student-fee-poc/dotnet/StudentFeePoc/appsettings.json`.
 
