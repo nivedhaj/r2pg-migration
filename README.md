@@ -10,10 +10,12 @@ A complete, production-ready demonstration of migrating school and fee managemen
 2. [Prerequisites](#-prerequisites)
 3. [Quick Start (One-Click Demo)](#-quick-start-one-click-demo)
 4. [Step-by-Step Demo Guide (Manual Execution)](#-step-by-step-demo-guide-manual-execution)
-   - [Step 1: Start Infrastructure & Web API](#step-1-start-infrastructure--web-api)
-   - [Step 2: Run Data Migration via Docker (Creates Tables & Loads Data)](#step-2-run-data-migration-via-docker-creates-tables--loads-data)
-   - [Step 3: Run Automated Unit & Integration Tests](#step-3-run-automated-unit--integration-tests)
-   - [Step 4: Execute `curl` REST API Tests](#step-4-execute-curl-rest-api-tests)
+   - [Step 1: Check Out the Repository into Local](#step-1-check-out-the-repository-into-local)
+   - [Step 2: Start Infrastructure & Web API](#step-2-start-infrastructure--web-api)
+   - [Step 3: Run Data Migration via Docker (Creates Tables & Loads Data)](#step-3-run-data-migration-via-docker-creates-tables--loads-data)
+   - [Step 4: Verify Data Parity (RavenDB vs PostgreSQL)](#step-4-verify-data-parity-ravendb-vs-postgresql)
+   - [Step 5: Run Automated Unit & Integration Tests](#step-5-run-automated-unit--integration-tests)
+   - [Step 6: Execute REST API Tests](#step-6-execute-rest-api-tests)
 5. [Database Schema, Views, Indexes & Triggers](#-database-schema-views-indexes--triggers)
 6. [API Endpoint Reference](#-api-endpoint-reference)
 7. [Repository Structure](#-repository-structure)
@@ -99,7 +101,7 @@ cp .env.example .env
 
 | Variable | Placeholder / Example | Description |
 |---|---|---|
-| `PG_PORT` | `5422` | Host port for PostgreSQL |
+| `PG_PORT` | `15432` | Host port for PostgreSQL port forwarding (`15432:5432` avoids standard `5432` collisions) |
 | `API_PORT` | `5000` | Host port for ASP.NET Core 10 Web API |
 | `PG_DB` | `rpg` | Target PostgreSQL database name |
 | `PG_USER` | `postgres` | Target PostgreSQL username |
@@ -119,13 +121,16 @@ cp .env.example .env
 
 ---
 
-### Step 1: Start Infrastructure & Web API
+### Step 1: Check Out the Repository into Local
+Check out the repository into your local development machine and navigate into the project root directory.
+
+---
+
+### Step 2: Start Infrastructure & Web API
 
 > [!TIP]
-> **Port Conflict / Existing Instances:** If you encounter a `port is already allocated` error (e.g. port 5422 or 5000) from older containers, stop them before starting:
-> ```bash
-> docker stop ct-postgres ct-dotnet-api
-> ```
+> **Port Forwarding & Zero Conflict:**
+> PostgreSQL host port forwarding is controlled via `PG_PORT` in `.env` (defaulting to `15432:5432`). If you already have a local PostgreSQL instance running on `5432`, there is no conflict! If you prefer another port, simply adjust `PG_PORT` in `.env`.
 
 Start the clean PostgreSQL database and ASP.NET Core Web API container using Docker Compose:
 
@@ -134,13 +139,13 @@ docker compose up -d --build postgres api
 ```
 
 #### What happens:
-1. **PostgreSQL Container (`rpg-postgres`)** starts on host port **`5422`**.
+1. **PostgreSQL Container (`rpg-postgres`)** starts with host port forwarding on **`15432`** (`15432:5432`).
 2. **.NET Web API Container (`rpg-dotnet-api`)** starts on host port **`5000`**.
    - Waits for PostgreSQL to be healthy before starting.
 
 #### 🔌 Connect pgAdmin / DBeaver to PostgreSQL:
 - **Host**: `localhost` (or `127.0.0.1`)
-- **Port**: **`5422`**
+- **Port**: **`15432`**
 - **Maintenance database**: `rpg`
 - **Username**: `postgres`
 - **Password**: `<your-postgres-password>` (as configured in `.env`)
@@ -158,7 +163,7 @@ docker compose up -d --build postgres api
 
 ---
 
-### Step 2: Run Data Migration via Docker (Creates Tables & Loads Data)
+### Step 3: Run Data Migration via Docker (Creates Tables & Loads Data)
 
 Extract data from RavenDB, dynamically create the PostgreSQL tables, load transformed records, and apply views & triggers:
 
@@ -178,7 +183,16 @@ docker compose run --rm migrator --all
 
 ---
 
-### Step 3: Run Automated Unit & Integration Tests
+### Step 4: Verify Data Parity (RavenDB vs PostgreSQL)
+
+Run the automated parity verification script to perform a 100% field-by-field audit across all 9 domains:
+```bash
+python scripts/verify_raven_to_postgres.py
+```
+
+---
+
+### Step 5: Run Automated Unit & Integration Tests
 
 Run the xUnit test suite inside the .NET 10 container (automatically pulls database connection settings from `.env`):
 
@@ -197,7 +211,7 @@ docker compose run --rm tests
 
 ---
 
-### Step 4: Execute `curl` REST API Tests
+### Step 6: Execute REST API Tests
 
 > [!TIP]
 > **Windows PowerShell Users:** In Windows PowerShell, type **`curl.exe`** instead of `curl` (e.g. `curl.exe -s "http://localhost:5000/api/students?limit=2"`).
@@ -231,6 +245,7 @@ curl.exe -s -X POST "http://localhost:5000/api/feeTx" \
     "refNo": "DEMO-CURL-01"
   }'
 ```
+
 
 ---
 

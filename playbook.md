@@ -26,7 +26,7 @@ cp .env.example .env
 
 | Variable | Placeholder / Default | Description |
 |---|---|---|
-| `PG_PORT` | `5422` | Host port for Docker PostgreSQL (avoids conflicts with local Postgres 5432/5433) |
+| `PG_PORT` | `15432` | Host port for Docker PostgreSQL port forwarding (maps `15432:5432` to avoid conflicts with local Postgres `5432`) |
 | `API_PORT` | `5000` | Host port for .NET 10 Web API |
 | `PG_DB` | `rpg` | Target PostgreSQL database name |
 | `PG_USER` | `postgres` | Target PostgreSQL username |
@@ -59,7 +59,7 @@ If you choose to run or debug the .NET 10 API and tests **directly on your host 
 ```json
 {
   "ConnectionStrings": {
-    "Postgres": "Host=localhost;Port=5422;Database=rpg;Username=postgres;Password=<your-postgres-password>"
+    "Postgres": "Host=localhost;Port=15432;Database=rpg;Username=postgres;Password=<your-postgres-password>"
   }
 }
 ```
@@ -68,15 +68,18 @@ If you choose to run or debug the .NET 10 API and tests **directly on your host 
 
 ## 3. Primary Execution Flow: Docker Approach (Zero-Config)
 
-Follow these 4 steps in order:
+Follow these steps in order:
 
-### Step 1: Start PostgreSQL & .NET 10 Web API
+### Step 1: Check Out the Repository into Local
+Check out the repository into your local development machine and navigate into the project root directory.
+
+---
+
+### Step 2: Start PostgreSQL & .NET 10 Web API
 
 > [!TIP]
-> **Port Conflict / Existing Instances:** If you encounter an error like `port is already allocated` or older container instances are running, stop them before starting:
-> ```bash
-> docker stop ct-postgres ct-dotnet-api
-> ```
+> **Port Forwarding & Zero Conflict:**
+> PostgreSQL host port forwarding is controlled via `PG_PORT` in `.env` (defaulting to `15432:5432`). If you have a local PostgreSQL instance running on `5432`, there is no conflict! If you prefer another port, simply adjust `PG_PORT` in `.env`.
 
 Start the PostgreSQL 16 database and ASP.NET Core 10 Web API container:
 ```bash
@@ -84,23 +87,23 @@ docker compose up -d --build postgres api
 ```
 
 #### 🔌 Connect pgAdmin to PostgreSQL:
-Right after running Step 1, connect pgAdmin to the running Docker database:
+Right after running this step, connect pgAdmin to the running Docker database:
 1. Open **pgAdmin**.
 2. In the left browser tree, right-click **Servers** ➔ **Register** ➔ **Server...**
 3. In the **General** tab:
-   - **Name**: `Docker RPG (Port 5422)`
+   - **Name**: `Docker RPG (Port 15432)`
 4. In the **Connection** tab:
    - **Host name/address**: `localhost` (or `127.0.0.1`)
-   - **Port**: **`5422`**
+   - **Port**: **`15432`**
    - **Maintenance database**: `rpg`
    - **Username**: `postgres`
    - **Password**: `<your-postgres-password>` *(configured in `.env`)*
 5. Click **Save**.
-6. The `rpg` database is now connected. *(Tables will be populated after Step 2).*
+6. The `rpg` database is now connected. *(Tables will be populated after Step 3).*
 
 ---
 
-### Step 2: Run Data Migration via Docker
+### Step 3: Run Data Migration via Docker
 Runs the Python ETL pipeline to extract data from RavenDB, dynamically create PostgreSQL base tables, transform documents, and apply indexes, views, and triggers:
 
 ```bash
@@ -113,11 +116,19 @@ docker compose run --rm migrator --all
 > docker compose run --rm migrator --module student,fees
 > ```
 
-> **View Migrated Tables in pgAdmin**: After migration finishes, in pgAdmin expand `Docker RPG (Port 5422)` ➔ `Databases` ➔ `rpg` ➔ `Schemas` ➔ `public`, then right-click **Tables** and click **Refresh** (or press `F5`) to view all 9 tables and views!
+> **View Migrated Tables in pgAdmin**: After migration finishes, in pgAdmin expand `Docker RPG (Port 15432)` ➔ `Databases` ➔ `rpg` ➔ `Schemas` ➔ `public`, then right-click **Tables** and click **Refresh** (or press `F5`) to view all 9 tables and views!
 
 ---
 
-### Step 3: Run Automated Tests (.NET 10)
+### Step 4: Verify Data Parity (RavenDB vs PostgreSQL)
+Run the automated parity verification script to perform a 100% field-by-field audit across all 9 domains:
+```bash
+python scripts/verify_raven_to_postgres.py
+```
+
+---
+
+### Step 5: Run Automated Tests (.NET 10)
 Executes all xUnit unit & integration tests inside the official .NET 10 container (automatically pulls database connection settings from `.env`):
 ```bash
 docker compose run --rm tests
@@ -125,7 +136,7 @@ docker compose run --rm tests
 
 ---
 
-### Step 4: Verify REST APIs & Swagger UI
+### Step 6: Verify REST APIs & Swagger UI
 
 Open your browser to interactively test the API via Swagger UI:
 👉 **[http://localhost:5000](http://localhost:5000)**
