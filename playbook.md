@@ -86,7 +86,7 @@ Check out the repository into your local development machine and navigate into t
 
 Start the PostgreSQL 16 database and ASP.NET Core 10 Web API container:
 ```bash
-docker compose up -d --build postgres api
+docker compose up -d --build rpg-postgres rpg-api
 ```
 
 #### 🔌 Connect pgAdmin to PostgreSQL:
@@ -111,12 +111,12 @@ Runs the Python ETL pipeline to extract data from RavenDB, dynamically create Po
 
 ```bash
 # Run all 6 migration modules (personas, courses, staffs, students, fees, exams):
-docker compose run --rm migrator --all
+docker compose run --rm rpg-migrator --all
 ```
 
 > **Selective Module Migration**: To run only specific modules (e.g. Students and Fees):
 > ```bash
-> docker compose run --rm migrator --module student,fees
+> docker compose run --rm rpg-migrator --module student,fees
 > ```
 
 > **View Migrated Tables in pgAdmin**: After migration finishes, in pgAdmin expand `Docker RPG (Port 15432)` ➔ `Databases` ➔ `rpg` ➔ `Schemas` ➔ `public`, then right-click **Tables** and click **Refresh** (or press `F5`) to view all 9 tables and views!
@@ -134,7 +134,7 @@ python scripts/verify_raven_to_postgres.py
 ### Step 5: Run Automated Tests (.NET 10)
 Executes all xUnit unit & integration tests inside the official .NET 10 container (automatically pulls database connection settings from `.env`):
 ```bash
-docker compose run --rm tests
+docker compose run --rm rpg-tests
 ```
 
 ---

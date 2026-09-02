@@ -78,10 +78,10 @@ Dockerized Migration Tool (Python ETL)
 From repo root:
 ```bash
 # 1. Start clean Postgres & Web API
-docker compose up -d --build postgres api
+docker compose up -d --build rpg-postgres rpg-api
 
 # 2. Run Data Migration (Creates tables, loads data, and applies view/triggers)
-docker compose run --rm migrator --all
+docker compose run --rm rpg-migrator --all
 ```
 - Swagger UI: [http://localhost:5000](http://localhost:5000)
 

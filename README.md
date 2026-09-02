@@ -135,12 +135,12 @@ Check out the repository into your local development machine and navigate into t
 Start the clean PostgreSQL database and ASP.NET Core Web API container using Docker Compose:
 
 ```bash
-docker compose up -d --build postgres api
+docker compose up -d --build rpg-postgres rpg-api
 ```
 
 #### What happens:
 1. **PostgreSQL Container (`rpg-postgres`)** starts with host port forwarding on **`15432`** (`15432:5432`).
-2. **.NET Web API Container (`rpg-dotnet-api`)** starts on host port **`5000`**.
+2. **.NET Web API Container (`rpg-api`)** starts on host port **`5000`**.
    - Waits for PostgreSQL to be healthy before starting.
 
 #### 🔌 Connect pgAdmin / DBeaver to PostgreSQL:
@@ -169,12 +169,12 @@ Extract data from RavenDB, dynamically create the PostgreSQL tables, load transf
 
 ```bash
 # Run migration across all modules (personas, courses, staffs, students, fees, exams)
-docker compose run --rm migrator --all
+docker compose run --rm rpg-migrator --all
 ```
 
 > **Tip**: To run only specific modules (e.g. Students and Fees):
 > ```bash
-> docker compose run --rm migrator --module student,fees
+> docker compose run --rm rpg-migrator --module student,fees
 > ```
 
 #### What happens:
@@ -197,7 +197,7 @@ python scripts/verify_raven_to_postgres.py
 Run the xUnit test suite inside the .NET 10 container (automatically pulls database connection settings from `.env`):
 
 ```bash
-docker compose run --rm tests
+docker compose run --rm rpg-tests
 ```
 
 *(Alternatively, if running on host with .NET 10 SDK: `dotnet test ./student-fee-poc/dotnet/student-fee-poc-tests/student-fee-poc-tests.csproj`)*
@@ -346,5 +346,5 @@ CT-RPG/
 #### 3. How to reset the database completely?
 ```bash
 docker compose down -v
-docker compose up -d --build postgres api
+docker compose up -d --build rpg-postgres rpg-api
 ```
